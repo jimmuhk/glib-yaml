@@ -2,16 +2,21 @@
 #include <glib.h>
 #include <glib/gprintf.h>
 
-static void parse_stream_rule   (yaml_parser_t *, yaml_event_t *);
-static void parse_document_rule (yaml_parser_t *, yaml_event_t *);
-static void parse_node_rule     (yaml_parser_t *, yaml_event_t *);
-static void parse_sequence_rule (yaml_parser_t *, yaml_event_t *);
-static void parse_mapping_rule  (yaml_parser_t *, yaml_event_t *);
+#define STREAM_RULE_PARSE_ERROR   1
+#define DOCUMENT_RULE_PARSE_ERROR 2
+#define NODE_RULE_PARSE_ERROR     3
+#define MAPPING_RULE_PARSE_ERROR  4
+
+static GQuark yaml_parser_error_domain;
+
+static gboolean parse_stream_rule   (yaml_parser_t *, yaml_event_t *, GError **);
+static gboolean parse_document_rule (yaml_parser_t *, yaml_event_t *, GError **);
+static gboolean parse_node_rule     (yaml_parser_t *, yaml_event_t *, GError **);
+static gboolean parse_sequence_rule (yaml_parser_t *, yaml_event_t *, GError **);
+static gboolean parse_mapping_rule  (yaml_parser_t *, yaml_event_t *, GError **);
 
 static void parse_alias_terminal  (yaml_event_t *);
 static void parse_scalar_terminal (yaml_event_t *);
-
-static gboolean verify_symbol (yaml_event_t *, yaml_event_type_t);
 
 static const gchar *yaml_event_type_to_string (yaml_event_type_t);
 
@@ -23,44 +28,75 @@ main (int argc, char **argv)
 
 	FILE *yaml_file;
 
+	GError *error;
+
 
 	yaml_file = fopen (argv [1], "r");
 
 	yaml_parser_initialize     (& parser);
 	yaml_parser_set_input_file (& parser, yaml_file);
 
-	parse_stream_rule (& parser, & event);
+	yaml_parser_error_domain = g_quark_from_string ("YAML_PARSER_ERROR");
+	error = NULL;
+
+	if (! parse_stream_rule (& parser, & event, & error)) {
+		g_fprintf (stderr, "Parse error (%d): %s\n", error->code, error->message);
+
+		g_error_free (error);
+	}
 
 	return 0;
 }
 
-static void
-parse_stream_rule (yaml_parser_t *parser, yaml_event_t *event)
+static gboolean
+parse_stream_rule (yaml_parser_t *parser, yaml_event_t *event, GError **error)
 {
 	yaml_parser_parse (parser, event);
-	verify_symbol (event, YAML_STREAM_START_EVENT);
+
+	if (event->type != YAML_STREAM_START_EVENT) {
+		g_set_error (
+			error,
+			yaml_parser_error_domain,
+			STREAM_RULE_PARSE_ERROR, 
+			"Missing symbol (%s)\n",
+			yaml_event_type_to_string (YAML_STREAM_START_EVENT));
+
+		return FALSE;
+	}
 
 	g_printf ("STREAM_START\n");
 
 	while (TRUE) {
 		yaml_parser_parse (parser, event);
 
-		if (event->type == YAML_DOCUMENT_START_EVENT)
-			parse_document_rule (parser, event);
+		if (event->type == YAML_DOCUMENT_START_EVENT) {
+			if (! parse_document_rule (parser, event, error))
+				return FALSE;
+		}
 
 		else if (event->type == YAML_STREAM_END_EVENT) {
 			g_printf ("STREAM_END\n");
 
-			return;
+			break;
 		}
 
-		else
-			g_error ("Parse error (parse_stream_rule [%s])\n", yaml_event_type_to_string (event->type));
+		else {
+			g_set_error (
+				error,
+				yaml_parser_error_domain,
+				STREAM_RULE_PARSE_ERROR, 
+				"Unexpected symbol (%s)\n",
+				yaml_event_type_to_string (event->type));
+
+			return FALSE;
+		}
 	}
+
+	return TRUE;
 }
 
-static void
-parse_document_rule (yaml_parser_t *parser, yaml_event_t *event)
+static gboolean
+parse_document_rule (yaml_parser_t *parser, yaml_event_t *event, GError **error)
 {
 	g_printf ("DOCUMENT_START\n");
 
@@ -69,24 +105,31 @@ parse_document_rule (yaml_parser_t *parser, yaml_event_t *event)
 	if (event->type == YAML_DOCUMENT_END_EVENT) {
 		g_printf ("DOCUMENT_END\n");
 
-		return;
+		return TRUE;
 	}
 
-	parse_node_rule (parser, event);
+	if (! parse_node_rule (parser, event, error))
+		return FALSE;
 
 	yaml_parser_parse (parser, event);
 
 	if (event->type == YAML_DOCUMENT_END_EVENT) {
 		g_printf ("DOCUMENT_END\n");
 
-		return;
+		return TRUE;
 	}
-	else
-		g_error ("Parse error (parse_document_rule can only have one node)\n");
+
+	g_set_error (
+		error,
+		yaml_parser_error_domain,
+		DOCUMENT_RULE_PARSE_ERROR,
+		"Document rule can have only one node\n");
+
+	return FALSE;
 }
 
-static void
-parse_node_rule (yaml_parser_t *parser, yaml_event_t *event)
+static gboolean
+parse_node_rule (yaml_parser_t *parser, yaml_event_t *event, GError **error)
 {
 	if (event->type == YAML_ALIAS_EVENT)
 		parse_alias_terminal (event);
@@ -94,18 +137,32 @@ parse_node_rule (yaml_parser_t *parser, yaml_event_t *event)
 	else if (event->type == YAML_SCALAR_EVENT)
 		parse_scalar_terminal (event);
 
-	else if (event->type == YAML_SEQUENCE_START_EVENT)
-		parse_sequence_rule (parser, event);
+	else if (event->type == YAML_SEQUENCE_START_EVENT) {
+		if (! parse_sequence_rule (parser, event, error))
+			return FALSE;
+	}
 
-	else if (event->type == YAML_MAPPING_START_EVENT)
-		parse_mapping_rule (parser, event);
+	else if (event->type == YAML_MAPPING_START_EVENT) {
+		if (! parse_mapping_rule (parser, event, error))
+			return FALSE;
+	}
 
-	else
-		g_error ("Parse error (parse_node_rule [%s])\n", yaml_event_type_to_string (event->type));
+	else {
+		g_set_error (
+			error,
+			yaml_parser_error_domain,
+			NODE_RULE_PARSE_ERROR,
+			"Unexpected symbol (%s)\n",
+			yaml_event_type_to_string (event->type));
+
+		return FALSE;
+	}
+
+	return TRUE;
 }
 
-static void
-parse_sequence_rule (yaml_parser_t *parser, yaml_event_t *event)
+static gboolean
+parse_sequence_rule (yaml_parser_t *parser, yaml_event_t *event, GError **error)
 {
 	g_printf ("SEQUENCE_START\n");
 
@@ -115,15 +172,18 @@ parse_sequence_rule (yaml_parser_t *parser, yaml_event_t *event)
 		if (event->type == YAML_SEQUENCE_END_EVENT) {
 			g_printf ("SEQUENCE_END\n");
 
-			return;
+			return TRUE;
 		}
 
-		parse_node_rule (parser, event);
+		if (! parse_node_rule (parser, event, error))
+			return FALSE;
 	}
+
+	return TRUE;
 }
 
-static void
-parse_mapping_rule (yaml_parser_t *parser, yaml_event_t *event)
+static gboolean
+parse_mapping_rule (yaml_parser_t *parser, yaml_event_t *event, GError **error)
 {
 	g_printf ("MAPPING_START\n");
 
@@ -133,22 +193,33 @@ parse_mapping_rule (yaml_parser_t *parser, yaml_event_t *event)
 		if (event->type == YAML_MAPPING_END_EVENT) {
 			g_printf ("MAPPING_END\n");
 
-			return;
+			break;
 		}
 
 		g_printf ("MAP_KEY\n");
 
-		parse_node_rule (parser, event);
+		if (! parse_node_rule (parser, event, error))
+			return FALSE;
 
 		yaml_parser_parse (parser, event);
 
-		if (event->type == YAML_MAPPING_END_EVENT)
-			g_error ("Parse error (parse_mapping_rule needs another node)\n");
+		if (event->type == YAML_MAPPING_END_EVENT) {
+			g_set_error (
+				error,
+				yaml_parser_error_domain,
+				MAPPING_RULE_PARSE_ERROR,
+				"Mapping rule missing value node\n");
+
+			return FALSE;
+		}
 
 		g_printf ("MAP_VALUE\n");
 
-		parse_node_rule (parser, event);
+		if (! parse_node_rule (parser, event, error))
+			return FALSE;
 	}
+
+	return TRUE;
 }
 
 static void
@@ -161,21 +232,6 @@ static void
 parse_scalar_terminal (yaml_event_t *event)
 {
 	g_printf ("SCALAR [%s]\n", event->data.scalar.value);
-}
-
-static gboolean
-verify_symbol (yaml_event_t *event, yaml_event_type_t type)
-{
-	if (event->type != type) {
-		g_error (
-			"Parse error (got [%s], expected [%s])\n",
-			yaml_event_type_to_string (event->type),
-			yaml_event_type_to_string (type));
-
-		return FALSE;
-	}
-
-	return TRUE;
 }
 
 static const gchar *
