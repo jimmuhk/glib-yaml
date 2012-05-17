@@ -4,9 +4,9 @@ CC = gcc
 CFLAGS  = -g -Wall $(shell pkg-config --cflags $(PKGS))
 LDFLAGS = $(shell pkg-config --libs $(PKGS))
 
-EXE = parse-yaml
+EXES = dump-yaml parse-yaml
 
-$(EXE):
+all: $(EXES)
 
 clean:
-	-rm -f $(EXE)
+	-rm -f $(EXES)
