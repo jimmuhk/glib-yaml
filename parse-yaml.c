@@ -18,6 +18,8 @@ static gboolean parse_mapping_rule  (yaml_parser_t *, yaml_event_t *, GError **)
 static void parse_alias_terminal  (yaml_event_t *);
 static void parse_scalar_terminal (yaml_event_t *);
 
+static void get_next_event (yaml_parser_t *, yaml_event_t *);
+
 static const gchar *yaml_event_type_to_string (yaml_event_type_t);
 
 int
@@ -45,13 +47,16 @@ main (int argc, char **argv)
 		g_error_free (error);
 	}
 
+	yaml_event_delete  (& event);
+	yaml_parser_delete (& parser);
+
 	return 0;
 }
 
 static gboolean
 parse_stream_rule (yaml_parser_t *parser, yaml_event_t *event, GError **error)
 {
-	yaml_parser_parse (parser, event);
+	get_next_event (parser, event);
 
 	if (event->type != YAML_STREAM_START_EVENT) {
 		g_set_error (
@@ -67,7 +72,7 @@ parse_stream_rule (yaml_parser_t *parser, yaml_event_t *event, GError **error)
 	g_printf ("STREAM_START\n");
 
 	while (TRUE) {
-		yaml_parser_parse (parser, event);
+		get_next_event (parser, event);
 
 		if (event->type == YAML_DOCUMENT_START_EVENT) {
 			if (! parse_document_rule (parser, event, error))
@@ -100,7 +105,7 @@ parse_document_rule (yaml_parser_t *parser, yaml_event_t *event, GError **error)
 {
 	g_printf ("DOCUMENT_START\n");
 
-	yaml_parser_parse (parser, event);
+	get_next_event (parser, event);
 
 	if (event->type == YAML_DOCUMENT_END_EVENT) {
 		g_printf ("DOCUMENT_END\n");
@@ -111,7 +116,7 @@ parse_document_rule (yaml_parser_t *parser, yaml_event_t *event, GError **error)
 	if (! parse_node_rule (parser, event, error))
 		return FALSE;
 
-	yaml_parser_parse (parser, event);
+	get_next_event (parser, event);
 
 	if (event->type == YAML_DOCUMENT_END_EVENT) {
 		g_printf ("DOCUMENT_END\n");
@@ -167,7 +172,7 @@ parse_sequence_rule (yaml_parser_t *parser, yaml_event_t *event, GError **error)
 	g_printf ("SEQUENCE_START\n");
 
 	while (TRUE) {
-		yaml_parser_parse (parser, event);
+		get_next_event (parser, event);
 
 		if (event->type == YAML_SEQUENCE_END_EVENT) {
 			g_printf ("SEQUENCE_END\n");
@@ -188,7 +193,7 @@ parse_mapping_rule (yaml_parser_t *parser, yaml_event_t *event, GError **error)
 	g_printf ("MAPPING_START\n");
 
 	while (TRUE) {
-		yaml_parser_parse (parser, event);
+		get_next_event (parser, event);
 
 		if (event->type == YAML_MAPPING_END_EVENT) {
 			g_printf ("MAPPING_END\n");
@@ -201,7 +206,7 @@ parse_mapping_rule (yaml_parser_t *parser, yaml_event_t *event, GError **error)
 		if (! parse_node_rule (parser, event, error))
 			return FALSE;
 
-		yaml_parser_parse (parser, event);
+		get_next_event (parser, event);
 
 		if (event->type == YAML_MAPPING_END_EVENT) {
 			g_set_error (
@@ -232,6 +237,13 @@ static void
 parse_scalar_terminal (yaml_event_t *event)
 {
 	g_printf ("SCALAR [%s]\n", event->data.scalar.value);
+}
+
+static void
+get_next_event (yaml_parser_t *parser, yaml_event_t *event)
+{
+	yaml_event_delete (event);
+	yaml_parser_parse (parser, event);
 }
 
 static const gchar *
