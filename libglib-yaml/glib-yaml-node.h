@@ -51,4 +51,7 @@ void glib_yaml_node_add_mapping_element  (GLibYAMLNode *mapping,  GLibYAMLNode *
 
 void glib_yaml_node_dump_to_file_handle (GLibYAMLNode *node, FILE *file_handle, gint indent_level);
 
+guint    glib_yaml_node_hash  (gconstpointer key);
+gboolean glib_yaml_node_equal (gconstpointer a, gconstpointer b);
+
 #endif

@@ -55,7 +55,7 @@ parse_stream_rule (GLibYAMLStream *stream, yaml_parser_t *parser, yaml_event_t *
 	GLibYAMLDocument *document;
 
 
-	get_next_event (parser, event);
+	yaml_parser_parse (parser, event);
 
 	if (event->type != YAML_STREAM_START_EVENT) {
 		g_set_error (
@@ -137,7 +137,7 @@ parse_document_rule (GLibYAMLDocument *document, yaml_parser_t *parser, yaml_eve
 static gboolean
 parse_node_rule (GLibYAMLDocument *document, GLibYAMLNode *node, yaml_parser_t *parser, yaml_event_t *event, GError **error)
 {
-	const gchar *anchor_key;
+	gchar *anchor_key;
 
 
 	if (event->type == YAML_ALIAS_EVENT)
@@ -146,7 +146,11 @@ parse_node_rule (GLibYAMLDocument *document, GLibYAMLNode *node, yaml_parser_t *
 	else if (event->type == YAML_SCALAR_EVENT) {
 		parse_scalar_terminal (node, event);
 
-		if ((anchor_key = (const gchar *) (event->data.scalar.anchor)) != NULL)
+		g_fprintf (stderr, "anchor = %p\n", event->data.scalar.anchor);
+		if (event->data.scalar.anchor != NULL)
+			g_fprintf (stderr, "anchor = [%s]\n", event->data.scalar.anchor);
+
+		if ((anchor_key = (gchar *) (event->data.scalar.anchor)) != NULL)
 			glib_yaml_document_add_anchor (document, anchor_key, node);
 	}
 
@@ -154,7 +158,7 @@ parse_node_rule (GLibYAMLDocument *document, GLibYAMLNode *node, yaml_parser_t *
 		if (! parse_sequence_rule (document, node, parser, event, error))
 			return FALSE;
 
-		if ((anchor_key = (const gchar *) (event->data.sequence_start.anchor)) != NULL)
+		if ((anchor_key = (gchar *) (event->data.sequence_start.anchor)) != NULL)
 			glib_yaml_document_add_anchor (document, anchor_key, node);
 	}
 
@@ -162,7 +166,7 @@ parse_node_rule (GLibYAMLDocument *document, GLibYAMLNode *node, yaml_parser_t *
 		if (! parse_mapping_rule (document, node, parser, event, error))
 			return FALSE;
 
-		if ((anchor_key = (const gchar *) (event->data.mapping_start.anchor)) != NULL)
+		if ((anchor_key = (gchar *) (event->data.mapping_start.anchor)) != NULL)
 			glib_yaml_document_add_anchor (document, anchor_key, node);
 	}
 
@@ -266,13 +270,13 @@ parse_alias_terminal (GLibYAMLDocument *document, GLibYAMLNode *node, yaml_event
 	glib_yaml_node_assign_as_alias (
 		node,
 		glib_yaml_document_get_anchor (
-			document, (const gchar *) event->data.alias.anchor));
+			document, (gchar *) event->data.alias.anchor));
 }
 
 static void
 parse_scalar_terminal (GLibYAMLNode *node, yaml_event_t *event)
 {
-	glib_yaml_node_assign_as_scalar (node, (const gchar *) event->data.scalar.value);
+	glib_yaml_node_assign_as_scalar (node, (gchar *) event->data.scalar.value);
 }
 
 static void

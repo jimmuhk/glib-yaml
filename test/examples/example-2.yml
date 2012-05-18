@@ -1,5 +1,2 @@
-howdy: hi
-%YAML 1.1
----
-yeah: boy-ee
-...
+- &hehe hi
+- *hehe

@@ -22,7 +22,7 @@ glib_yaml_document_new ()
 	this       = g_object_new (GLIB_YAML_DOCUMENT_TYPE, NULL);
 	this->root = glib_yaml_node_new ();
 
-	GLIB_YAML_DOCUMENT_GET_PRIVATE (this)->anchors = g_hash_table_new_full (g_str_hash, g_direct_equal, g_free, g_object_unref);
+	GLIB_YAML_DOCUMENT_GET_PRIVATE (this)->anchors = g_hash_table_new_full (g_str_hash, glib_yaml_node_equal, g_free, g_object_unref);
 
 	return this;
 }
@@ -37,34 +37,33 @@ glib_yaml_document_set_version_directive (GLibYAMLDocument *this, gint major_num
 void
 glib_yaml_document_add_anchor (GLibYAMLDocument *this, const gchar *anchor_key, GLibYAMLNode *anchor_node)
 {
-	gpointer hehe;
+	GHashTableIter iter;
+	gpointer key, value;
 
-	g_fprintf (stderr, "Found anchor [%s:0x%X], putting %p in %p (%d)\n", anchor_key, g_str_hash (anchor_key), anchor_node, GLIB_YAML_DOCUMENT_GET_PRIVATE (this)->anchors, g_hash_table_size (GLIB_YAML_DOCUMENT_GET_PRIVATE (this)->anchors));
+
+	g_object_ref (anchor_node);
 
 	g_hash_table_insert (
 		GLIB_YAML_DOCUMENT_GET_PRIVATE (this)->anchors,
 		g_strdup (anchor_key),
-		(hehe = g_object_ref (anchor_node)));
+		anchor_node);
 
-	g_fprintf (stderr, "contains [%s,0x%X] = %s\n", anchor_key, g_str_hash (anchor_key), g_hash_table_contains (GLIB_YAML_DOCUMENT_GET_PRIVATE (this)->anchors, anchor_key) ? "TRUE" : "FALSE");
-	g_fprintf (stderr, "size = %d\n", g_hash_table_size (GLIB_YAML_DOCUMENT_GET_PRIVATE (this)->anchors));
-	g_fprintf (stderr, "hehe = %p\n", hehe);
+	g_hash_table_iter_init (& iter, GLIB_YAML_DOCUMENT_GET_PRIVATE (this)->anchors);
+	while (g_hash_table_iter_next (& iter, & key, & value))
+		g_fprintf (stderr, "in: key (%s), value (%p) %s\n", (gchar *) key, value, IS_GLIB_YAML_NODE (value) ? "GLibYAMLNode" : "Dunno");
 }
 
 GLibYAMLNode *
 glib_yaml_document_get_anchor (GLibYAMLDocument *this, const gchar *anchor_key)
 {
-	GLibYAMLNode *anchor_node;
+	GHashTableIter iter;
+	gpointer key, value;
 
-	anchor_node = GLIB_YAML_NODE (g_hash_table_lookup (GLIB_YAML_DOCUMENT_GET_PRIVATE (this)->anchors, anchor_key));
+	g_hash_table_iter_init (& iter, GLIB_YAML_DOCUMENT_GET_PRIVATE (this)->anchors);
+	while (g_hash_table_iter_next (& iter, & key, & value))
+		g_fprintf (stderr, "out: key (%s), value (%p) %s\n", (gchar *) key, value, IS_GLIB_YAML_NODE (value) ? "GLibYAMLNode" : "Dunno");
 
-	g_fprintf (stderr, "Looking for [%s,0x%X] in %p, got %p\n", anchor_key, g_str_hash (anchor_key), GLIB_YAML_DOCUMENT_GET_PRIVATE (this)->anchors, anchor_node);
-	g_fprintf (stderr, "contains [%s,0x%X] = %s\n", anchor_key, g_str_hash (anchor_key), g_hash_table_contains (GLIB_YAML_DOCUMENT_GET_PRIVATE (this)->anchors, anchor_key) ? "TRUE" : "FALSE");
-	g_fprintf (stderr, "size = %d\n", g_hash_table_size (GLIB_YAML_DOCUMENT_GET_PRIVATE (this)->anchors));
-
-	return anchor_node;
-
-/*	return GLIB_YAML_NODE (g_hash_table_lookup (GLIB_YAML_DOCUMENT_GET_PRIVATE (this)->anchors, anchor_key)); */
+	return GLIB_YAML_NODE (g_hash_table_lookup (GLIB_YAML_DOCUMENT_GET_PRIVATE (this)->anchors, anchor_key));
 }
 
 void
