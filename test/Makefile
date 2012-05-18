@@ -1,4 +1,4 @@
-PKGS = glib-2.0 yaml-0.1
+PKGS = glib-2.0 yaml-0.1 libglib-yaml
 
 CC = gcc
 CFLAGS  = -g -Wall $(shell pkg-config --cflags $(PKGS))
