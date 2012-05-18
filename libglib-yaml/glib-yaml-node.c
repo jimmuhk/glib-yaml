@@ -1,5 +1,7 @@
 #include "glib-yaml-node.h"
 
+#include "glib-yaml-stream.h"
+
 #include <glib/gprintf.h>
 
 G_DEFINE_TYPE (GLibYAMLNode, glib_yaml_node, G_TYPE_OBJECT)
@@ -11,8 +13,6 @@ typedef struct {
 #define GLIB_YAML_NODE_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), GLIB_YAML_NODE_TYPE, GLibYAMLNodePrivate))
 
 static void finalize (GObject *);
-
-static void write_indent_string (FILE *, gint);
 
 GLibYAMLNode *
 glib_yaml_node_new ()
@@ -75,25 +75,27 @@ glib_yaml_node_add_mapping_element (GLibYAMLNode *this, GLibYAMLNode *key, GLibY
 void
 glib_yaml_node_dump_to_file_handle (GLibYAMLNode *this, FILE *handle, gint indent_level)
 {
+	gchar *indent_string;
+
 	GHashTableIter iter;
 	gpointer       key, value;
 
 	gint i;
 
 
-	write_indent_string (handle, indent_level);
+	indent_string = glib_yaml_stream_get_indent_string (indent_level);
 
 	switch (this->type) {
 		case GLIB_YAML_ALIAS_NODE:
-			g_fprintf (handle, "ALIAS [%s]\n", this->data.alias);
+			g_fprintf (handle, "%sALIAS [%s]\n", indent_string, this->data.alias);
 			break;
 
 		case GLIB_YAML_SCALAR_NODE:
-			g_fprintf (handle, "SCALAR [%s]\n", this->data.scalar);
+			g_fprintf (handle, "%sSCALAR [%s]\n", indent_string, this->data.scalar);
 			break;
 
 		case GLIB_YAML_SEQUENCE_NODE:
-			g_fprintf (handle, "SEQUENCE-START\n");
+			g_fprintf (handle, "%sSEQUENCE-START\n", indent_string);
 
 			for (i = 0; i < this->data.sequence->len; ++ i)
 				glib_yaml_node_dump_to_file_handle (
@@ -101,33 +103,29 @@ glib_yaml_node_dump_to_file_handle (GLibYAMLNode *this, FILE *handle, gint inden
 					handle,
 					indent_level + 1);
 
-			write_indent_string (handle, indent_level);
-			g_fprintf (handle, "SEQUENCE-END\n");
+			g_fprintf (handle, "%sSEQUENCE-END\n", indent_string);
 
 			break;
 
 		case GLIB_YAML_MAPPING_NODE:
-			g_fprintf (handle, "MAPPING-START\n");
+			g_fprintf (handle, "%sMAPPING-START\n", indent_string);
 
 			g_hash_table_iter_init (& iter, this->data.mapping);
 
 			while (g_hash_table_iter_next (& iter, & key, & value)) {
-				write_indent_string (handle, indent_level + 1);
-				g_fprintf (handle, "KEY\n");
-
+				g_fprintf (handle, "%sKEY\n", indent_string);
 				glib_yaml_node_dump_to_file_handle ((GLibYAMLNode *) key, handle, indent_level + 2);
 
-				write_indent_string (handle, indent_level + 1);
-				g_fprintf (handle, "VALUE\n");
-
+				g_fprintf (handle, "%sVALUE\n", indent_string);
 				glib_yaml_node_dump_to_file_handle ((GLibYAMLNode *) value, handle, indent_level + 2);
 			}
 
-			write_indent_string (handle, indent_level);
-			g_fprintf (handle, "MAPPING-END\n");
+			g_fprintf (handle, "%sMAPPING-END\n", indent_string);
 
 			break;
 	}
+
+	g_free (indent_string);
 }
 
 static void
@@ -172,13 +170,4 @@ finalize (GObject *g_object)
 	}
 
 	(* G_OBJECT_CLASS (glib_yaml_node_parent_class)->finalize) (g_object);
-}
-
-static void
-write_indent_string (FILE *handle, gint level)
-{
-	gint i;
-
-	for (i = 0; i < level; ++ i)
-		g_fprintf (handle, "    ");
 }

@@ -2,6 +2,7 @@
 #define __GLIB_YAML_STREAM_H__
 
 #include <stdio.h>
+#include <yaml.h>
 #include <glib-object.h>
 
 #define GLIB_YAML_STREAM_TYPE                    (glib_yaml_stream_get_type ())
@@ -18,13 +19,15 @@ typedef struct {
 typedef struct {
 	GObject g_object;
 
-	GList *documents;
+	yaml_encoding_t  encoding;
+	GList           *documents;
 } GLibYAMLStream;
 
 GType glib_yaml_stream_get_type (void);
 
 GLibYAMLStream *glib_yaml_stream_load_from_file_path (const gchar *yaml_path, GError **error);
 
-void glib_yaml_stream_dump_to_file_handle (GLibYAMLStream *stream, FILE *handle);
+void   glib_yaml_stream_dump_to_file_handle (GLibYAMLStream *stream, FILE *handle);
+gchar *glib_yaml_stream_get_indent_string   (gint level);
 
 #endif

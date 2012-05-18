@@ -1,2 +1,5 @@
 2012-05-17  Jim Krehl  <jimmyk@jimmyk.org>
+	* Added GLibYAMLDocument to support version directives
+
+2012-05-17  Jim Krehl  <jimmyk@jimmyk.org>
 	* Initial version, supports most yaml formats.

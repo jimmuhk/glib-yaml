@@ -2,7 +2,10 @@
 
 #include <yaml.h>
 
+#include "glib-yaml-document.h"
 #include "glib-yaml-node.h"
+
+#include <glib/gprintf.h>
 
 GQuark
 glib_yaml_parser_error_quark ()
@@ -15,11 +18,11 @@ glib_yaml_parser_error_quark ()
 	return parser_error_quark;
 }
 
-static gboolean parse_stream_rule   (GLibYAMLStream *, yaml_parser_t *, yaml_event_t *, GError **);
-static gboolean parse_document_rule (GLibYAMLNode   *, yaml_parser_t *, yaml_event_t *, GError **);
-static gboolean parse_node_rule     (GLibYAMLNode   *, yaml_parser_t *, yaml_event_t *, GError **);
-static gboolean parse_sequence_rule (GLibYAMLNode   *, yaml_parser_t *, yaml_event_t *, GError **);
-static gboolean parse_mapping_rule  (GLibYAMLNode   *, yaml_parser_t *, yaml_event_t *, GError **);
+static gboolean parse_stream_rule   (GLibYAMLStream   *, yaml_parser_t *, yaml_event_t *, GError **);
+static gboolean parse_document_rule (GLibYAMLDocument *, yaml_parser_t *, yaml_event_t *, GError **);
+static gboolean parse_node_rule     (GLibYAMLNode     *, yaml_parser_t *, yaml_event_t *, GError **);
+static gboolean parse_sequence_rule (GLibYAMLNode     *, yaml_parser_t *, yaml_event_t *, GError **);
+static gboolean parse_mapping_rule  (GLibYAMLNode     *, yaml_parser_t *, yaml_event_t *, GError **);
 
 static void parse_alias_terminal  (GLibYAMLNode *, yaml_event_t *);
 static void parse_scalar_terminal (GLibYAMLNode *, yaml_event_t *);
@@ -51,7 +54,7 @@ glib_yaml_parser_parse_stream (GLibYAMLStream *stream, FILE *yaml_file_handle, G
 static gboolean
 parse_stream_rule (GLibYAMLStream *stream, yaml_parser_t *parser, yaml_event_t *event, GError **error)
 {
-	GLibYAMLNode *document;
+	GLibYAMLDocument *document;
 
 
 	get_next_event (parser, event);
@@ -67,11 +70,13 @@ parse_stream_rule (GLibYAMLStream *stream, yaml_parser_t *parser, yaml_event_t *
 		return FALSE;
 	}
 
+	stream->encoding = event->data.stream_start.encoding;
+
 	while (TRUE) {
 		get_next_event (parser, event);
 
 		if (event->type == YAML_DOCUMENT_START_EVENT) {
-			document = glib_yaml_node_new ();
+			document = glib_yaml_document_new ();
 
 			if (! parse_document_rule (document, parser, event, error)) {
 				g_object_unref (document);
@@ -101,14 +106,20 @@ parse_stream_rule (GLibYAMLStream *stream, yaml_parser_t *parser, yaml_event_t *
 }
 
 static gboolean
-parse_document_rule (GLibYAMLNode *node, yaml_parser_t *parser, yaml_event_t *event, GError **error)
+parse_document_rule (GLibYAMLDocument *document, yaml_parser_t *parser, yaml_event_t *event, GError **error)
 {
+	if (event->data.document_start.version_directive != NULL)
+		glib_yaml_document_set_version_directive (
+			document,
+			event->data.document_start.version_directive->major,
+			event->data.document_start.version_directive->minor);
+
 	get_next_event (parser, event);
 
 	if (event->type == YAML_DOCUMENT_END_EVENT)
 		return TRUE;
 
-	if (! parse_node_rule (node, parser, event, error))
+	if (! parse_node_rule (document->root, parser, event, error))
 		return FALSE;
 
 	get_next_event (parser, event);
