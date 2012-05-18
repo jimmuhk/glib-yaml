@@ -1,6 +1,7 @@
 #ifndef __GLIB_YAML_NODE_H__
 #define __GLIB_YAML_NODE_H__
 
+#include <stdio.h>
 #include <glib-object.h>
 
 #define GLIB_YAML_NODE_TYPE                    (glib_yaml_node_get_type ())

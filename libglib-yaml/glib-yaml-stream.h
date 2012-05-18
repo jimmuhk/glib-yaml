@@ -1,6 +1,7 @@
 #ifndef __GLIB_YAML_STREAM_H__
 #define __GLIB_YAML_STREAM_H__
 
+#include <stdio.h>
 #include <glib-object.h>
 
 #define GLIB_YAML_STREAM_TYPE                    (glib_yaml_stream_get_type ())

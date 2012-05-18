@@ -1,5 +1,7 @@
 #include "glib-yaml-node.h"
 
+#include <glib/gprintf.h>
+
 G_DEFINE_TYPE (GLibYAMLNode, glib_yaml_node, G_TYPE_OBJECT)
 
 static void finalize (GObject *);
@@ -55,7 +57,7 @@ glib_yaml_node_add_sequence_element (GLibYAMLNode *this, GLibYAMLNode *node)
 {
 	g_assert (this->type == GLIB_YAML_SEQUENCE_NODE);
 
-	g_ptr_array_add ((* this)->data.sequence, node);
+	g_ptr_array_add (this->data.sequence, node);
 }
 
 void
@@ -63,7 +65,7 @@ glib_yaml_node_add_mapping_element (GLibYAMLNode *this, GLibYAMLNode *key, GLibY
 {
 	g_assert (this->type == GLIB_YAML_MAPPING_NODE);
 
-	g_hash_table_insert ((* this)->data.mapping, key, value);
+	g_hash_table_insert (this->data.mapping, key, value);
 }
 
 void

@@ -1,4 +1,8 @@
-#include "glib-document.h"
+#include "glib-yaml-stream.h"
+
+#include <glib/gprintf.h>
+
+#include "glib-yaml-node.h"
 
 G_DEFINE_TYPE (GLibYAMLStream, glib_yaml_stream, G_TYPE_OBJECT)
 
@@ -20,11 +24,11 @@ glib_yaml_stream_dump_to_file_handle (GLibYAMLStream *this, FILE *file_handle)
 	GList *document;
 
 	for (document = g_list_first (this->documents); document; document = g_list_next (document)) {
-		g_printf ("DOCUMENT-START\n");
+		g_fprintf (file_handle, "DOCUMENT-START\n");
 
-		dump_glib_yaml_node ((GLibYAMLNode *) (document->data), stdout, 1);
+		glib_yaml_node_dump_to_file_handle (GLIB_YAML_NODE (document->data), file_handle, 1);
 
-		g_printf ("DOCUMENT-END\n");
+		g_fprintf (file_handle, "DOCUMENT-END\n");
 	}
 }
 
