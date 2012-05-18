@@ -37,10 +37,12 @@ typedef struct {
 
 GType glib_yaml_node_get_type (void);
 
-GLibYAMLNode *glib_yaml_node_new_alias    (const gchar *alias);
-GLibYAMLNode *glib_yaml_node_new_scalar   (const gchar *scalar);
-GLibYAMLNode *glib_yaml_node_new_sequence (void);
-GLibYAMLNode *glib_yaml_node_new_mapping  (void);
+GLibYAMLNode *glib_yaml_node_new (void);
+
+void glib_yaml_node_assign_as_alias    (GLibYAMLNode *node, const gchar *alias);
+void glib_yaml_node_assign_as_scalar   (GLibYAMLNode *node, const gchar *scalar);
+void glib_yaml_node_assign_as_sequence (GLibYAMLNode *node);
+void glib_yaml_node_assign_as_mapping  (GLibYAMLNode *node);
 
 void glib_yaml_node_add_sequence_element (GLibYAMLNode *sequence, GLibYAMLNode *node);
 void glib_yaml_node_add_mapping_element  (GLibYAMLNode *mapping,  GLibYAMLNode *key, GLibYAMLNode *value);

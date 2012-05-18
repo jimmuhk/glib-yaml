@@ -4,52 +4,56 @@
 
 G_DEFINE_TYPE (GLibYAMLNode, glib_yaml_node, G_TYPE_OBJECT)
 
+typedef struct {
+	gboolean assigned;
+} GLibYAMLNodePrivate;
+
+#define GLIB_YAML_NODE_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), GLIB_YAML_NODE_TYPE, GLibYAMLNodePrivate))
+
 static void finalize (GObject *);
 
 static void write_indent_string (FILE *, gint);
 
 GLibYAMLNode *
-glib_yaml_node_new_alias (const gchar *alias)
+glib_yaml_node_new ()
 {
-	GLibYAMLNode *this = g_object_new (GLIB_YAML_NODE_TYPE, NULL);
+	return g_object_new (GLIB_YAML_NODE_TYPE, NULL);
+}
 
+void
+glib_yaml_node_assign_as_alias (GLibYAMLNode *this, const gchar *alias)
+{
 	this->type       = GLIB_YAML_ALIAS_NODE;
 	this->data.alias = g_strdup (alias);
 
-	return this;
+	GLIB_YAML_NODE_GET_PRIVATE (this)->assigned = TRUE;
 }
 
-GLibYAMLNode *
-glib_yaml_node_new_scalar (const gchar *scalar)
+void
+glib_yaml_node_assign_as_scalar (GLibYAMLNode *this, const gchar *scalar)
 {
-	GLibYAMLNode *this = g_object_new (GLIB_YAML_NODE_TYPE, NULL);
-
 	this->type        = GLIB_YAML_SCALAR_NODE;
 	this->data.scalar = g_strdup (scalar);
 
-	return this;
+	GLIB_YAML_NODE_GET_PRIVATE (this)->assigned = TRUE;
 }
 
-GLibYAMLNode *
-glib_yaml_node_new_sequence ()
+void
+glib_yaml_node_assign_as_sequence (GLibYAMLNode *this)
 {
-	GLibYAMLNode *this = g_object_new (GLIB_YAML_NODE_TYPE, NULL);
-
 	this->type          = GLIB_YAML_SEQUENCE_NODE;
 	this->data.sequence = g_ptr_array_new_with_free_func (g_object_unref);
 
-	return this;
+	GLIB_YAML_NODE_GET_PRIVATE (this)->assigned = TRUE;
 }
 
-GLibYAMLNode *
-glib_yaml_node_new_mapping ()
+void
+glib_yaml_node_assign_as_mapping (GLibYAMLNode *this)
 {
-	GLibYAMLNode *this = g_object_new (GLIB_YAML_NODE_TYPE, NULL);
-
 	this->type         = GLIB_YAML_MAPPING_NODE;
 	this->data.mapping = g_hash_table_new_full (g_direct_hash, g_direct_equal, g_object_unref, g_object_unref);
 
-	return this;
+	GLIB_YAML_NODE_GET_PRIVATE (this)->assigned = TRUE;
 }
 
 void
@@ -130,37 +134,44 @@ static void
 glib_yaml_node_class_init (GLibYAMLNodeClass *this_class)
 {
 	G_OBJECT_CLASS (this_class)->finalize = finalize;
+
+	g_type_class_add_private (this_class, sizeof (GLibYAMLNodePrivate));
 }
 
 static void
 glib_yaml_node_init (GLibYAMLNode *this)
 {
+	GLIB_YAML_NODE_GET_PRIVATE (this)->assigned = FALSE;
 }
 
 static void
 finalize (GObject *g_object)
 {
 	GLibYAMLNode *this = GLIB_YAML_NODE (g_object);
+	GLibYAMLNodePrivate *priv = GLIB_YAML_NODE_GET_PRIVATE (this);
 
-	switch (this->type) {
-		case GLIB_YAML_ALIAS_NODE:
-			g_free (this->data.alias);
-			break;
 
-		case GLIB_YAML_SCALAR_NODE:
-			g_free (this->data.scalar);
-			break;
+	if (priv->assigned) {
+		switch (this->type) {
+			case GLIB_YAML_ALIAS_NODE:
+				g_free (this->data.alias);
+				break;
 
-		case GLIB_YAML_SEQUENCE_NODE:
-			g_ptr_array_free (this->data.sequence, TRUE);
-			break;
+			case GLIB_YAML_SCALAR_NODE:
+				g_free (this->data.scalar);
+				break;
 
-		case GLIB_YAML_MAPPING_NODE:
-			g_hash_table_unref (this->data.mapping);
-			break;
+			case GLIB_YAML_SEQUENCE_NODE:
+				g_ptr_array_free (this->data.sequence, TRUE);
+				break;
+
+			case GLIB_YAML_MAPPING_NODE:
+				g_hash_table_unref (this->data.mapping);
+				break;
+		}
 	}
 
-	(*G_OBJECT_CLASS (glib_yaml_node_parent_class)->finalize) (g_object);
+	(* G_OBJECT_CLASS (glib_yaml_node_parent_class)->finalize) (g_object);
 }
 
 static void

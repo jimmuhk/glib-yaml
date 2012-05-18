@@ -2,6 +2,7 @@
 
 #include <glib/gprintf.h>
 
+#include "glib-yaml-parser.h"
 #include "glib-yaml-node.h"
 
 G_DEFINE_TYPE (GLibYAMLStream, glib_yaml_stream, G_TYPE_OBJECT)
@@ -9,11 +10,24 @@ G_DEFINE_TYPE (GLibYAMLStream, glib_yaml_stream, G_TYPE_OBJECT)
 static void finalize (GObject *);
 
 GLibYAMLStream *
-glib_yaml_stream_load_from_file_path (const gchar *yaml_path)
+glib_yaml_stream_load_from_file_path (const gchar *yaml_path, GError **error)
 {
 	GLibYAMLStream *stream;
 
+	FILE *yaml_file_handle;
+
+
 	stream = g_object_new (GLIB_YAML_STREAM_TYPE, NULL);
+
+	yaml_file_handle = fopen (yaml_path, "r");
+
+	if (! glib_yaml_parser_parse_stream (stream, yaml_file_handle, error)) {
+		g_object_unref (stream);
+
+		stream = NULL;
+	}
+
+	fclose (yaml_file_handle);
 
 	return stream;
 }
