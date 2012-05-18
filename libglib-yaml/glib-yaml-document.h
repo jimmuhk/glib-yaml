@@ -34,6 +34,10 @@ GType glib_yaml_document_get_type (void);
 GLibYAMLDocument *glib_yaml_document_new ();
 
 void glib_yaml_document_set_version_directive (GLibYAMLDocument *document, gint major_number, gint minor_number);
-void glib_yaml_document_dump_to_file_handle   (GLibYAMLDocument *document, FILE *handle, gint indent_level);
+
+void          glib_yaml_document_add_anchor (GLibYAMLDocument *document, const gchar *anchor_key, GLibYAMLNode *anchor_node);
+GLibYAMLNode *glib_yaml_document_get_anchor (GLibYAMLDocument *document, const gchar *anchor_key);
+
+void glib_yaml_document_dump_to_file_handle (GLibYAMLDocument *document, FILE *handle, gint indent_level);
 
 #endif

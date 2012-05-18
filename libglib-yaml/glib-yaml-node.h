@@ -22,24 +22,26 @@ typedef enum {
 	GLIB_YAML_MAPPING_NODE
 } GLibYAMLNodeType;
 
-typedef struct {
+typedef struct GLibYAMLNode_s GLibYAMLNode;
+
+struct GLibYAMLNode_s {
 	GObject g_object;
 
 	GLibYAMLNodeType type;
 
 	union {
-		gchar      *alias;
-		gchar      *scalar;
-		GPtrArray  *sequence;
-		GHashTable *mapping;
+		GLibYAMLNode *alias;
+		gchar        *scalar;
+		GPtrArray    *sequence;
+		GHashTable   *mapping;
 	} data;
-} GLibYAMLNode;
+};
 
 GType glib_yaml_node_get_type (void);
 
 GLibYAMLNode *glib_yaml_node_new (void);
 
-void glib_yaml_node_assign_as_alias    (GLibYAMLNode *node, const gchar *alias);
+void glib_yaml_node_assign_as_alias    (GLibYAMLNode *node, GLibYAMLNode *anchor_node);
 void glib_yaml_node_assign_as_scalar   (GLibYAMLNode *node, const gchar *scalar);
 void glib_yaml_node_assign_as_sequence (GLibYAMLNode *node);
 void glib_yaml_node_assign_as_mapping  (GLibYAMLNode *node);
@@ -47,6 +49,6 @@ void glib_yaml_node_assign_as_mapping  (GLibYAMLNode *node);
 void glib_yaml_node_add_sequence_element (GLibYAMLNode *sequence, GLibYAMLNode *node);
 void glib_yaml_node_add_mapping_element  (GLibYAMLNode *mapping,  GLibYAMLNode *key, GLibYAMLNode *value);
 
-void glib_yaml_node_dump_to_file_handle (GLibYAMLNode *node, FILE *handle, gint indent_level);
+void glib_yaml_node_dump_to_file_handle (GLibYAMLNode *node, FILE *file_handle, gint indent_level);
 
 #endif

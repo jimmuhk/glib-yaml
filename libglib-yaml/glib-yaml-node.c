@@ -1,13 +1,14 @@
 #include "glib-yaml-node.h"
 
-#include "glib-yaml-stream.h"
-
 #include <glib/gprintf.h>
+
+#include "glib-yaml-stream.h"
 
 G_DEFINE_TYPE (GLibYAMLNode, glib_yaml_node, G_TYPE_OBJECT)
 
 typedef struct {
-	gboolean assigned;
+	gboolean  assigned;
+	guint    *hash_key;
 } GLibYAMLNodePrivate;
 
 #define GLIB_YAML_NODE_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), GLIB_YAML_NODE_TYPE, GLibYAMLNodePrivate))
@@ -21,10 +22,10 @@ glib_yaml_node_new ()
 }
 
 void
-glib_yaml_node_assign_as_alias (GLibYAMLNode *this, const gchar *alias)
+glib_yaml_node_assign_as_alias (GLibYAMLNode *this, GLibYAMLNode *anchor_node)
 {
 	this->type       = GLIB_YAML_ALIAS_NODE;
-	this->data.alias = g_strdup (alias);
+	this->data.alias = g_object_ref (anchor_node);
 
 	GLIB_YAML_NODE_GET_PRIVATE (this)->assigned = TRUE;
 }
@@ -73,7 +74,7 @@ glib_yaml_node_add_mapping_element (GLibYAMLNode *this, GLibYAMLNode *key, GLibY
 }
 
 void
-glib_yaml_node_dump_to_file_handle (GLibYAMLNode *this, FILE *handle, gint indent_level)
+glib_yaml_node_dump_to_file_handle (GLibYAMLNode *this, FILE *file_handle, gint indent_level)
 {
 	gchar *indent_string;
 
@@ -87,40 +88,46 @@ glib_yaml_node_dump_to_file_handle (GLibYAMLNode *this, FILE *handle, gint inden
 
 	switch (this->type) {
 		case GLIB_YAML_ALIAS_NODE:
-			g_fprintf (handle, "%sALIAS [%s]\n", indent_string, this->data.alias);
+			g_fprintf (file_handle, "%sALIAS\n", indent_string);
+
+			if (IS_GLIB_YAML_NODE (this->data.alias))
+				glib_yaml_node_dump_to_file_handle (this->data.alias, file_handle, indent_level + 1);
+			else
+				g_fprintf (file_handle, "%s  MISSING ANCHOR\n", indent_string);
+
 			break;
 
 		case GLIB_YAML_SCALAR_NODE:
-			g_fprintf (handle, "%sSCALAR [%s]\n", indent_string, this->data.scalar);
+			g_fprintf (file_handle, "%sSCALAR [%s]\n", indent_string, this->data.scalar);
 			break;
 
 		case GLIB_YAML_SEQUENCE_NODE:
-			g_fprintf (handle, "%sSEQUENCE-START\n", indent_string);
+			g_fprintf (file_handle, "%sSEQUENCE-START\n", indent_string);
 
 			for (i = 0; i < this->data.sequence->len; ++ i)
 				glib_yaml_node_dump_to_file_handle (
 					(GLibYAMLNode *) g_ptr_array_index (this->data.sequence, i),
-					handle,
+					file_handle,
 					indent_level + 1);
 
-			g_fprintf (handle, "%sSEQUENCE-END\n", indent_string);
+			g_fprintf (file_handle, "%sSEQUENCE-END\n", indent_string);
 
 			break;
 
 		case GLIB_YAML_MAPPING_NODE:
-			g_fprintf (handle, "%sMAPPING-START\n", indent_string);
+			g_fprintf (file_handle, "%sMAPPING-START\n", indent_string);
 
 			g_hash_table_iter_init (& iter, this->data.mapping);
 
 			while (g_hash_table_iter_next (& iter, & key, & value)) {
-				g_fprintf (handle, "%sKEY\n", indent_string);
-				glib_yaml_node_dump_to_file_handle ((GLibYAMLNode *) key, handle, indent_level + 2);
+				g_fprintf (file_handle, "%sKEY\n", indent_string);
+				glib_yaml_node_dump_to_file_handle ((GLibYAMLNode *) key, file_handle, indent_level + 2);
 
-				g_fprintf (handle, "%sVALUE\n", indent_string);
-				glib_yaml_node_dump_to_file_handle ((GLibYAMLNode *) value, handle, indent_level + 2);
+				g_fprintf (file_handle, "%sVALUE\n", indent_string);
+				glib_yaml_node_dump_to_file_handle ((GLibYAMLNode *) value, file_handle, indent_level + 2);
 			}
 
-			g_fprintf (handle, "%sMAPPING-END\n", indent_string);
+			g_fprintf (file_handle, "%sMAPPING-END\n", indent_string);
 
 			break;
 	}
@@ -152,7 +159,7 @@ finalize (GObject *g_object)
 	if (priv->assigned) {
 		switch (this->type) {
 			case GLIB_YAML_ALIAS_NODE:
-				g_free (this->data.alias);
+				g_object_unref (this->data.alias);
 				break;
 
 			case GLIB_YAML_SCALAR_NODE:
