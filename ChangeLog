@@ -1,3 +1,6 @@
+2012-05-20  Jim Krehl  <jimmyk@jimmyk.org>
+	* Added alias / anchor support
+
 2012-05-17  Jim Krehl  <jimmyk@jimmyk.org>
 	* Added GLibYAMLDocument to support version directives
 
