@@ -8,7 +8,6 @@ G_DEFINE_TYPE (GLibYAMLNode, glib_yaml_node, G_TYPE_OBJECT)
 
 typedef struct {
 	gboolean assigned;
-	guint    hash_key;
 } GLibYAMLNodePrivate;
 
 #define GLIB_YAML_NODE_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), GLIB_YAML_NODE_TYPE, GLibYAMLNodePrivate))
@@ -18,11 +17,7 @@ static void finalize (GObject *);
 GLibYAMLNode *
 glib_yaml_node_new ()
 {
-	GLibYAMLNode *this = g_object_new (GLIB_YAML_NODE_TYPE, NULL);
-
-	GLIB_YAML_NODE_GET_PRIVATE (this)->hash_key = (guint) g_random_int ();
-
-	return this;
+	return g_object_new (GLIB_YAML_NODE_TYPE, NULL);
 }
 
 void
@@ -58,7 +53,7 @@ void
 glib_yaml_node_assign_as_mapping (GLibYAMLNode *this)
 {
 	this->type         = GLIB_YAML_MAPPING_NODE;
-	this->data.mapping = g_hash_table_new_full (glib_yaml_node_hash, glib_yaml_node_equal, g_object_unref, g_object_unref);
+	this->data.mapping = g_hash_table_new_full (g_direct_hash, g_direct_equal, g_object_unref, g_object_unref);
 
 	GLIB_YAML_NODE_GET_PRIVATE (this)->assigned = TRUE;
 }
@@ -141,26 +136,6 @@ glib_yaml_node_dump_to_file_handle (GLibYAMLNode *this, FILE *file_handle, gint 
 	g_free (indent_string);
 }
 
-guint
-glib_yaml_node_hash (gconstpointer key)
-{
-	g_assert (IS_GLIB_YAML_NODE (key));
-
-	return GLIB_YAML_NODE_GET_PRIVATE (key)->hash_key;
-}
-
-gboolean
-glib_yaml_node_equal (gconstpointer a, gconstpointer b)
-{
-	g_fprintf (stderr, "a (%p), b (%p)\n", a, b);
-
-/*	g_assert (IS_GLIB_YAML_NODE (a) && IS_GLIB_YAML_NODE (b)); */
-
-	return
-		GLIB_YAML_NODE_GET_PRIVATE (a)->hash_key ==
-		GLIB_YAML_NODE_GET_PRIVATE (b)->hash_key;
-}
-
 static void
 glib_yaml_node_class_init (GLibYAMLNodeClass *this_class)
 {
@@ -172,10 +147,7 @@ glib_yaml_node_class_init (GLibYAMLNodeClass *this_class)
 static void
 glib_yaml_node_init (GLibYAMLNode *this)
 {
-	GLibYAMLNodePrivate *priv = GLIB_YAML_NODE_GET_PRIVATE (this);
-	
-	priv->assigned = FALSE;
-	priv->hash_key = 0;
+	GLIB_YAML_NODE_GET_PRIVATE (this)->assigned = FALSE;
 }
 
 static void

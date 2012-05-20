@@ -146,10 +146,6 @@ parse_node_rule (GLibYAMLDocument *document, GLibYAMLNode *node, yaml_parser_t *
 	else if (event->type == YAML_SCALAR_EVENT) {
 		parse_scalar_terminal (node, event);
 
-		g_fprintf (stderr, "anchor = %p\n", event->data.scalar.anchor);
-		if (event->data.scalar.anchor != NULL)
-			g_fprintf (stderr, "anchor = [%s]\n", event->data.scalar.anchor);
-
 		if ((anchor_key = (gchar *) (event->data.scalar.anchor)) != NULL)
 			glib_yaml_document_add_anchor (document, anchor_key, node);
 	}
