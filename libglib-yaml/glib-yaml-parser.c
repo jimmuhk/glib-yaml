@@ -144,26 +144,26 @@ parse_node_rule (GLibYAMLDocument *document, GLibYAMLNode *node, yaml_parser_t *
 		parse_alias_terminal (document, node, event);
 
 	else if (event->type == YAML_SCALAR_EVENT) {
-		parse_scalar_terminal (node, event);
-
 		if ((anchor_key = (gchar *) (event->data.scalar.anchor)) != NULL)
 			glib_yaml_document_add_anchor (document, anchor_key, node);
+
+		parse_scalar_terminal (node, event);
 	}
 
 	else if (event->type == YAML_SEQUENCE_START_EVENT) {
-		if (! parse_sequence_rule (document, node, parser, event, error))
-			return FALSE;
-
 		if ((anchor_key = (gchar *) (event->data.sequence_start.anchor)) != NULL)
 			glib_yaml_document_add_anchor (document, anchor_key, node);
+
+		if (! parse_sequence_rule (document, node, parser, event, error))
+			return FALSE;
 	}
 
 	else if (event->type == YAML_MAPPING_START_EVENT) {
-		if (! parse_mapping_rule (document, node, parser, event, error))
-			return FALSE;
-
 		if ((anchor_key = (gchar *) (event->data.mapping_start.anchor)) != NULL)
 			glib_yaml_document_add_anchor (document, anchor_key, node);
+
+		if (! parse_mapping_rule (document, node, parser, event, error))
+			return FALSE;
 	}
 
 	else {

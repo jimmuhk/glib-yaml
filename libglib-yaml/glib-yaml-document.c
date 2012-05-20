@@ -22,7 +22,7 @@ glib_yaml_document_new ()
 	this       = g_object_new (GLIB_YAML_DOCUMENT_TYPE, NULL);
 	this->root = glib_yaml_node_new ();
 
-	GLIB_YAML_DOCUMENT_GET_PRIVATE (this)->anchors = g_hash_table_new_full (g_str_hash, glib_yaml_node_equal, g_free, g_object_unref);
+	GLIB_YAML_DOCUMENT_GET_PRIVATE (this)->anchors = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_object_unref);
 
 	return this;
 }
@@ -37,32 +37,15 @@ glib_yaml_document_set_version_directive (GLibYAMLDocument *this, gint major_num
 void
 glib_yaml_document_add_anchor (GLibYAMLDocument *this, const gchar *anchor_key, GLibYAMLNode *anchor_node)
 {
-	GHashTableIter iter;
-	gpointer key, value;
-
-
-	g_object_ref (anchor_node);
-
 	g_hash_table_insert (
 		GLIB_YAML_DOCUMENT_GET_PRIVATE (this)->anchors,
 		g_strdup (anchor_key),
-		anchor_node);
-
-	g_hash_table_iter_init (& iter, GLIB_YAML_DOCUMENT_GET_PRIVATE (this)->anchors);
-	while (g_hash_table_iter_next (& iter, & key, & value))
-		g_fprintf (stderr, "in: key (%s), value (%p) %s\n", (gchar *) key, value, IS_GLIB_YAML_NODE (value) ? "GLibYAMLNode" : "Dunno");
+		g_object_ref (anchor_node));
 }
 
 GLibYAMLNode *
 glib_yaml_document_get_anchor (GLibYAMLDocument *this, const gchar *anchor_key)
 {
-	GHashTableIter iter;
-	gpointer key, value;
-
-	g_hash_table_iter_init (& iter, GLIB_YAML_DOCUMENT_GET_PRIVATE (this)->anchors);
-	while (g_hash_table_iter_next (& iter, & key, & value))
-		g_fprintf (stderr, "out: key (%s), value (%p) %s\n", (gchar *) key, value, IS_GLIB_YAML_NODE (value) ? "GLibYAMLNode" : "Dunno");
-
 	return GLIB_YAML_NODE (g_hash_table_lookup (GLIB_YAML_DOCUMENT_GET_PRIVATE (this)->anchors, anchor_key));
 }
 
