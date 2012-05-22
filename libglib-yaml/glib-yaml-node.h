@@ -78,6 +78,12 @@ GType glib_yaml_scalar_node_get_type (void);
 
 GLibYAMLScalarNode *glib_yaml_scalar_node_new (const gchar *value);
 
+gboolean  glib_yaml_scalar_node_get_boolean (GLibYAMLScalarNode *scalar);
+guint     glib_yaml_scalar_node_get_uint    (GLibYAMLScalarNode *scalar);
+gint      glib_yaml_scalar_node_get_int     (GLibYAMLScalarNode *scalar);
+gdouble   glib_yaml_scalar_node_get_double  (GLibYAMLScalarNode *scalar);
+gchar    *glib_yaml_scalar_node_get_string  (GLibYAMLScalarNode *scalar);
+
 /* GLibYAMLSequenceNode */
 
 #define GLIB_YAML_SEQUENCE_NODE_TYPE                    (glib_yaml_sequence_node_get_type ())
@@ -128,5 +134,11 @@ GLibYAMLMappingNode *glib_yaml_mapping_node_new (void);
 
 void          glib_yaml_mapping_node_add            (GLibYAMLMappingNode *mapping, GLibYAMLNode *key, GLibYAMLNode *value);
 GLibYAMLNode *glib_yaml_mapping_node_find_by_scalar (GLibYAMLMappingNode *mapping, const gchar *key);
+
+gboolean  glib_yaml_mapping_node_get_boolean (GLibYAMLMappingNode *mapping, const gchar *key);
+guint     glib_yaml_mapping_node_get_uint    (GLibYAMLMappingNode *mapping, const gchar *key);
+gint      glib_yaml_mapping_node_get_int     (GLibYAMLMappingNode *mapping, const gchar *key);
+gdouble   glib_yaml_mapping_node_get_double  (GLibYAMLMappingNode *mapping, const gchar *key);
+gchar    *glib_yaml_mapping_node_get_string  (GLibYAMLMappingNode *mapping, const gchar *key);
 
 #endif

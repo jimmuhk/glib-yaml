@@ -18,6 +18,36 @@ glib_yaml_scalar_node_new (const gchar *value)
 	return this;
 }
 
+gboolean
+glib_yaml_scalar_node_get_boolean (GLibYAMLScalarNode *this)
+{
+	return (strcmp (this->value, "true") == 0 ? TRUE : FALSE);
+}
+
+guint
+glib_yaml_scalar_node_get_uint (GLibYAMLScalarNode *this)
+{
+	return (guint) strtol (this->value, NULL, 10);
+}
+
+gint
+glib_yaml_scalar_node_get_int (GLibYAMLScalarNode *this)
+{
+	return (gint) strtol (this->value, NULL, 10);
+}
+
+gdouble
+glib_yaml_scalar_node_get_double (GLibYAMLScalarNode *this)
+{
+	return strtod (this->value, NULL);
+}
+
+gchar *
+glib_yaml_scalar_node_get_string (GLibYAMLScalarNode *this)
+{
+	return this->value;
+}
+
 static void
 glib_yaml_scalar_node_class_init (GLibYAMLScalarNodeClass *this_class)
 {

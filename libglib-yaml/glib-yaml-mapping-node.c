@@ -37,6 +37,46 @@ glib_yaml_mapping_node_find_by_scalar (GLibYAMLMappingNode *this, const gchar *k
 	return value_node;
 }
 
+gboolean
+glib_yaml_mapping_node_get_boolean (GLibYAMLMappingNode *this, const gchar *key)
+{
+	return glib_yaml_scalar_node_get_boolean (
+		GLIB_YAML_SCALAR_NODE (
+			glib_yaml_mapping_node_find_by_scalar (this, key)));
+}
+
+guint
+glib_yaml_mapping_node_get_uint (GLibYAMLMappingNode *this, const gchar *key)
+{
+	return glib_yaml_scalar_node_get_uint (
+		GLIB_YAML_SCALAR_NODE (
+			glib_yaml_mapping_node_find_by_scalar (this, key)));
+}
+
+gint
+glib_yaml_mapping_node_get_int (GLibYAMLMappingNode *this, const gchar *key)
+{
+	return glib_yaml_scalar_node_get_int (
+		GLIB_YAML_SCALAR_NODE (
+			glib_yaml_mapping_node_find_by_scalar (this, key)));
+}
+
+gdouble
+glib_yaml_mapping_node_get_double (GLibYAMLMappingNode *this, const gchar *key)
+{
+	return glib_yaml_scalar_node_get_double (
+		GLIB_YAML_SCALAR_NODE (
+			glib_yaml_mapping_node_find_by_scalar (this, key)));
+}
+
+gchar *
+glib_yaml_mapping_node_get_string (GLibYAMLMappingNode *this, const gchar *key)
+{
+	return glib_yaml_scalar_node_get_string (
+		GLIB_YAML_SCALAR_NODE (
+			glib_yaml_mapping_node_find_by_scalar (this, key)));
+}
+
 static void
 glib_yaml_mapping_node_class_init (GLibYAMLMappingNodeClass *this_class)
 {
@@ -89,6 +129,8 @@ to_string (GLibYAMLNode *glib_yaml_node, guint indent_level)
 		child_string = GLIB_YAML_NODE_GET_CLASS (key)->to_string (GLIB_YAML_NODE (key), indent_level + 2);
 		g_string_append (buf, child_string);
 		g_free (child_string);
+
+		g_string_append_printf (buf, "%sVALUE\n", indent_string_labels);
 
 		child_string = GLIB_YAML_NODE_GET_CLASS (value)->to_string (GLIB_YAML_NODE (value), indent_level + 2);
 		g_string_append (buf, child_string);

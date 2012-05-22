@@ -1,3 +1,7 @@
+2012-05-22  Jim Krehl  <jimmyk@jimmyk.org>
+	* Add primitive type accessors to GLibYAMLMappingNode and
+	* GLibYAMLScalarNode.
+
 2012-05-21  Jim Krehl  <jimmyk@jimmyk.org>
 	* Split GLibYAMLNode into base classes to support scalar retrieval from
 	* mappings.
