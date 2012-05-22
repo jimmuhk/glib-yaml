@@ -15,9 +15,13 @@ libglib_yaml_includedir = $(INSTALL_INCLUDE_DIR)
 libglib_yaml_include_HEADERS = glib-yaml.h
 
 libglib_yaml_la_SOURCES = \
-	glib-yaml-parser.c   \
-	glib-yaml-stream.c   \
-	glib-yaml-document.c \
-	glib-yaml-node.c
+	glib-yaml-parser.c        \
+	glib-yaml-stream.c        \
+	glib-yaml-document.c      \
+	glib-yaml-node.c          \
+	glib-yaml-alias-node.c    \
+	glib-yaml-scalar-node.c   \
+	glib-yaml-sequence-node.c \
+	glib-yaml-mapping-node.c
 
 libglib_yaml_la_LIBADD = $(LIBGLIB_YAML_LIBS)

@@ -17,14 +17,7 @@ static void finalize (GObject *);
 GLibYAMLDocument *
 glib_yaml_document_new ()
 {
-	GLibYAMLDocument *this;
-
-	this       = g_object_new (GLIB_YAML_DOCUMENT_TYPE, NULL);
-	this->root = glib_yaml_node_new ();
-
-	GLIB_YAML_DOCUMENT_GET_PRIVATE (this)->anchors = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_object_unref);
-
-	return this;
+	return g_object_new (GLIB_YAML_DOCUMENT_TYPE, NULL);
 }
 
 void
@@ -37,10 +30,12 @@ glib_yaml_document_set_version_directive (GLibYAMLDocument *this, gint major_num
 void
 glib_yaml_document_add_anchor (GLibYAMLDocument *this, const gchar *anchor_key, GLibYAMLNode *anchor_node)
 {
-	g_hash_table_insert (
-		GLIB_YAML_DOCUMENT_GET_PRIVATE (this)->anchors,
-		g_strdup (anchor_key),
-		g_object_ref (anchor_node));
+	GLibYAMLDocumentPrivate *priv = GLIB_YAML_DOCUMENT_GET_PRIVATE (this);
+
+	if (priv->anchors == NULL)
+		priv->anchors = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_object_unref);
+
+	g_hash_table_insert (priv->anchors, g_strdup (anchor_key), g_object_ref (anchor_node));
 }
 
 GLibYAMLNode *

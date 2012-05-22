@@ -28,6 +28,6 @@ GType glib_yaml_stream_get_type (void);
 GLibYAMLStream *glib_yaml_stream_load_from_file_path (const gchar *yaml_path, GError **error);
 
 void   glib_yaml_stream_dump_to_file_handle (GLibYAMLStream *stream, FILE *handle);
-gchar *glib_yaml_stream_get_indent_string   (gint level);
+gchar *glib_yaml_stream_get_indent_string   (guint level);
 
 #endif

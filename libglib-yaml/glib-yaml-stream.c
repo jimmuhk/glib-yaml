@@ -68,10 +68,10 @@ glib_yaml_stream_dump_to_file_handle (GLibYAMLStream *this, FILE *file_handle)
 }
 
 gchar *
-glib_yaml_stream_get_indent_string (gint level)
+glib_yaml_stream_get_indent_string (guint level)
 {
 	gchar *indent_string;
-	gint   i;
+	guint  i;
 
 
 	indent_string = g_new (gchar, 4 * level + 1);
