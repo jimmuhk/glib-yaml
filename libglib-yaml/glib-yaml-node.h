@@ -126,6 +126,7 @@ GType glib_yaml_mapping_node_get_type (void);
 
 GLibYAMLMappingNode *glib_yaml_mapping_node_new (void);
 
-void glib_yaml_mapping_node_add (GLibYAMLMappingNode *mapping, GLibYAMLNode *key, GLibYAMLNode *value);
+void          glib_yaml_mapping_node_add            (GLibYAMLMappingNode *mapping, GLibYAMLNode *key, GLibYAMLNode *value);
+GLibYAMLNode *glib_yaml_mapping_node_find_by_scalar (GLibYAMLMappingNode *mapping, const gchar *key);
 
 #endif

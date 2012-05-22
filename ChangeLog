@@ -1,3 +1,7 @@
+2012-05-21  Jim Krehl  <jimmyk@jimmyk.org>
+	* Split GLibYAMLNode into base classes to support scalar retrieval from
+	* mappings.
+
 2012-05-20  Jim Krehl  <jimmyk@jimmyk.org>
 	* Added alias / anchor support
 

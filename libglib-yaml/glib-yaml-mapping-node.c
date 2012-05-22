@@ -22,6 +22,21 @@ glib_yaml_mapping_node_add (GLibYAMLMappingNode *this, GLibYAMLNode *key, GLibYA
 	g_hash_table_insert (this->nodes, key, value);
 }
 
+GLibYAMLNode *
+glib_yaml_mapping_node_find_by_scalar (GLibYAMLMappingNode *this, const gchar *key)
+{
+	GLibYAMLScalarNode *key_node;
+	GLibYAMLNode       *value_node;
+
+
+	key_node   = glib_yaml_scalar_node_new (key);
+	value_node = GLIB_YAML_NODE (g_hash_table_lookup (this->nodes, key_node));
+
+	g_object_unref (key_node);
+
+	return value_node;
+}
+
 static void
 glib_yaml_mapping_node_class_init (GLibYAMLMappingNodeClass *this_class)
 {
