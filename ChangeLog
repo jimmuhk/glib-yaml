@@ -1,10 +1,11 @@
 2012-05-22  Jim Krehl  <jimmyk@jimmyk.org>
 	* Add primitive type accessors to GLibYAMLMappingNode and
-	* GLibYAMLScalarNode.
+	  GLibYAMLScalarNode.
+	* Add glib_yaml_stream_load_from_file_handle () method
 
 2012-05-21  Jim Krehl  <jimmyk@jimmyk.org>
 	* Split GLibYAMLNode into base classes to support scalar retrieval from
-	* mappings.
+	  mappings.
 
 2012-05-20  Jim Krehl  <jimmyk@jimmyk.org>
 	* Added alias / anchor support

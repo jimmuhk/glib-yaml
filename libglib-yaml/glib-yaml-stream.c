@@ -1,5 +1,6 @@
 #include "glib-yaml-stream.h"
 
+#include <yaml.h>
 #include <glib/gprintf.h>
 
 #include "glib-yaml-parser.h"
@@ -18,17 +19,28 @@ glib_yaml_stream_load_from_file_path (const gchar *yaml_path, GError **error)
 	FILE *yaml_file_handle;
 
 
-	stream = g_object_new (GLIB_YAML_STREAM_TYPE, NULL);
-
 	yaml_file_handle = fopen (yaml_path, "r");
+
+	stream = glib_yaml_stream_load_from_file_handle (yaml_file_handle, error);
+
+	fclose (yaml_file_handle);
+
+	return stream;
+}
+
+GLibYAMLStream *
+glib_yaml_stream_load_from_file_handle (FILE *yaml_file_handle, GError **error)
+{
+	GLibYAMLStream *stream;
+
+
+	stream = g_object_new (GLIB_YAML_STREAM_TYPE, NULL);
 
 	if (! glib_yaml_parser_parse_stream (stream, yaml_file_handle, error)) {
 		g_object_unref (stream);
 
 		stream = NULL;
 	}
-
-	fclose (yaml_file_handle);
 
 	return stream;
 }
