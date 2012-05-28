@@ -4,7 +4,7 @@ CC = gcc
 CFLAGS  = -g -Wall $(shell pkg-config --cflags $(PKGS))
 LDFLAGS = $(shell pkg-config --libs $(PKGS))
 
-EXES = dump-yaml parse-yaml
+EXES = dump-yaml parse-yaml find-node
 
 all: $(EXES)
 

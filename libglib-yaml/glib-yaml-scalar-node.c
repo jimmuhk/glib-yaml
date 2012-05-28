@@ -42,7 +42,7 @@ glib_yaml_scalar_node_get_double (GLibYAMLScalarNode *this)
 	return strtod (this->value, NULL);
 }
 
-gchar *
+const gchar *
 glib_yaml_scalar_node_get_string (GLibYAMLScalarNode *this)
 {
 	return this->value;

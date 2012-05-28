@@ -16,10 +16,10 @@ glib_yaml_sequence_node_new ()
 void
 glib_yaml_sequence_node_append (GLibYAMLSequenceNode *this, GLibYAMLNode *node)
 {
-	if (this->nodes == NULL)
-		this->nodes = g_ptr_array_new_with_free_func (g_object_unref);
+	if (this->list == NULL)
+		this->list = g_ptr_array_new_with_free_func (g_object_unref);
 
-	g_ptr_array_add (this->nodes, node);
+	g_ptr_array_add (this->list, node);
 }
 
 static void
@@ -32,13 +32,13 @@ glib_yaml_sequence_node_class_init (GLibYAMLSequenceNodeClass *this_class)
 static void
 glib_yaml_sequence_node_init (GLibYAMLSequenceNode *this)
 {
-	this->nodes = NULL;
+	this->list = NULL;
 }
 
 static void
 finalize (GObject *g_object)
 {
-	g_ptr_array_free (GLIB_YAML_SEQUENCE_NODE (g_object)->nodes, TRUE);
+	g_ptr_array_free (GLIB_YAML_SEQUENCE_NODE (g_object)->list, TRUE);
 
 	G_OBJECT_CLASS (glib_yaml_sequence_node_parent_class)->finalize (g_object);
 }
@@ -65,8 +65,8 @@ to_string (GLibYAMLNode *glib_yaml_node, guint indent_level)
 
 	g_string_append_printf (buf, "%sSEQUENCE-START\n", indent_string);
 
-	for (i = 0; i < this->nodes->len; ++ i) {
-		node = GLIB_YAML_NODE (g_ptr_array_index (this->nodes, i));
+	for (i = 0; i < this->list->len; ++ i) {
+		node = GLIB_YAML_NODE (g_ptr_array_index (this->list, i));
 
 		child_string = GLIB_YAML_NODE_GET_CLASS (node)->to_string (node, indent_level + 1);
 		g_string_append (buf, child_string);

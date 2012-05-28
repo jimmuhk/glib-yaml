@@ -1,3 +1,7 @@
+2012-05-28  Jim Krehl  <jimmyk@jimmyk.org>
+	* Add glib_yaml_node_path_get_* methods to support traversing document
+	* GLibYAMLMappingNodes.
+
 2012-05-22  Jim Krehl  <jimmyk@jimmyk.org>
 	* Add primitive type accessors to GLibYAMLMappingNode and
 	  GLibYAMLScalarNode.
